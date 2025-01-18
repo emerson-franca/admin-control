@@ -5,17 +5,12 @@ import {
   ReactNode,
   useEffect,
 } from "react";
-
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  status: "Active" | "Inactive";
-  lastSeen: string;
-}
+import { Agent, agentApi } from "../services/api";
 
 interface AgentState {
   agents: Agent[];
+  loading: boolean;
+  error: string | null;
 }
 
 interface AddAgentAction {
@@ -33,28 +28,66 @@ interface DeleteAgentAction {
   payload: string;
 }
 
-type AgentAction = AddAgentAction | UpdateAgentAction | DeleteAgentAction;
+interface SetAgentsAction {
+  type: "SET_AGENTS";
+  payload: Agent[];
+}
+
+interface SetLoadingAction {
+  type: "SET_LOADING";
+  payload: boolean;
+}
+
+interface SetErrorAction {
+  type: "SET_ERROR";
+  payload: string;
+}
+
+type AgentAction =
+  | AddAgentAction
+  | UpdateAgentAction
+  | DeleteAgentAction
+  | SetAgentsAction
+  | SetLoadingAction
+  | SetErrorAction;
 
 const initialState: AgentState = {
-  agents: JSON.parse(localStorage.getItem("agents") || "[]"),
+  agents: [],
+  loading: false,
+  error: null,
 };
 
 function agentReducer(state: AgentState, action: AgentAction): AgentState {
   switch (action.type) {
+    case "SET_AGENTS":
+      return { ...state, agents: action.payload, loading: false, error: null };
     case "ADD_AGENT":
-      return { ...state, agents: [...state.agents, action.payload] };
+      return {
+        ...state,
+        agents: [...state.agents, action.payload],
+        loading: false,
+        error: null,
+      };
     case "UPDATE_AGENT":
       return {
         ...state,
         agents: state.agents.map((agent) =>
           agent.id === action.payload.id ? action.payload : agent
         ),
+        loading: false,
+        error: null,
       };
     case "DELETE_AGENT":
       return {
         ...state,
         agents: state.agents.filter((agent) => agent.id !== action.payload),
+        loading: false,
+        error: null,
       };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_ERROR":
+      return { ...state, error: action.payload, loading: false };
     default:
       return state;
   }
@@ -70,8 +103,21 @@ export const AgentProvider: React.FC<{ children: ReactNode }> = ({
   const [state, dispatch] = useReducer(agentReducer, initialState);
 
   useEffect(() => {
-    localStorage.setItem("agents", JSON.stringify(state.agents));
-  }, [state.agents]);
+    const fetchAgents = async () => {
+      dispatch({ type: "SET_LOADING", payload: true });
+      try {
+        const agents = await agentApi.getAll();
+        dispatch({ type: "SET_AGENTS", payload: agents });
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Failed to fetch agents. Please try again later.",
+        });
+      }
+    };
+
+    fetchAgents();
+  }, []);
 
   return (
     <AgentContext.Provider value={{ state, dispatch }}>
