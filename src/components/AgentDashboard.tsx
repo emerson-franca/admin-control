@@ -3,19 +3,11 @@ import { useAgentContext } from "../context/AgentContext";
 import AgentList from "./AgentList";
 import AgentForm from "./AgentForm";
 import SearchBar from "./SearchBar";
+import { Agent } from "../services/api";
 
 const AgentDashboard: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingAgent, setEditingAgent] = useState<
-    | {
-        id: string;
-        name: string;
-        email: string;
-        status: "Active" | "Inactive";
-        lastSeen: string;
-      }
-    | undefined
-  >(undefined);
+  const [editingAgent, setEditingAgent] = useState<Agent>();
   const [searchQuery, setSearchQuery] = useState("");
   const { state } = useAgentContext();
 
@@ -24,13 +16,7 @@ const AgentDashboard: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleEditAgent = (agent: {
-    id: string;
-    name: string;
-    email: string;
-    status: "Active" | "Inactive";
-    lastSeen: string;
-  }) => {
+  const handleEditAgent = (agent: Agent) => {
     setEditingAgent(agent);
     setIsFormOpen(true);
   };
@@ -40,6 +26,25 @@ const AgentDashboard: React.FC = () => {
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       agent.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (state.loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-red-50 text-red-800 p-4 rounded-lg shadow-sm">
+          <h3 className="text-lg font-medium">Error</h3>
+          <p>{state.error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -52,7 +57,7 @@ const AgentDashboard: React.FC = () => {
             Manage your network of agents efficiently
           </p>
         </div>
-        
+
         <div className="mt-12 mb-6">
           <SearchBar onSearch={setSearchQuery} />
           <div className="flex justify-end max-w-2xl mx-auto mt-4">
@@ -98,7 +103,10 @@ const AgentDashboard: React.FC = () => {
               </span>
 
               <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <AgentForm agent={editingAgent} onClose={() => setIsFormOpen(false)} />
+                <AgentForm
+                  agent={editingAgent}
+                  onClose={() => setIsFormOpen(false)}
+                />
               </div>
             </div>
           </div>
