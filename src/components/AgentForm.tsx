@@ -1,14 +1,9 @@
 import React, { useState } from "react";
 import { useAgentContext } from "../context/AgentContext";
+import { Agent, agentApi } from "../services/api";
 
 interface AgentFormProps {
-  agent?: {
-    id: string;
-    name: string;
-    email: string;
-    status: "Active" | "Inactive";
-    lastSeen: string;
-  };
+  agent?: Agent;
   onClose: () => void;
 }
 
@@ -17,23 +12,38 @@ const AgentForm: React.FC<AgentFormProps> = ({ agent, onClose }) => {
   const [name, setName] = useState(agent?.name || "");
   const [email, setEmail] = useState(agent?.email || "");
   const [status, setStatus] = useState(agent?.status || "Active");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newAgent = {
-      id: agent?.id || Date.now().toString(),
-      name,
-      email,
-      status,
-      lastSeen: new Date().toLocaleString(),
-    };
+    setIsSubmitting(true);
+    setError(null);
 
-    if (agent) {
-      dispatch({ type: "UPDATE_AGENT", payload: newAgent });
-    } else {
-      dispatch({ type: "ADD_AGENT", payload: newAgent });
+    try {
+      const agentData = {
+        id: agent?.id || Date.now().toString(),
+        name,
+        email,
+        status: status as "Active" | "Inactive",
+        lastSeen: new Date().toISOString(),
+      };
+
+      if (agent) {
+        const updatedAgent = await agentApi.update(agentData);
+        dispatch({ type: "UPDATE_AGENT", payload: updatedAgent });
+      } else {
+        const newAgent = await agentApi.create(agentData);
+        dispatch({ type: "ADD_AGENT", payload: newAgent });
+      }
+      onClose();
+    } catch (err) {
+      setError(
+        "Failed to save agent. Please check your connection and try again."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-    onClose();
   };
 
   return (
@@ -61,6 +71,13 @@ const AgentForm: React.FC<AgentFormProps> = ({ agent, onClose }) => {
           </svg>
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-md p-4">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label
@@ -116,14 +133,42 @@ const AgentForm: React.FC<AgentFormProps> = ({ agent, onClose }) => {
             type="button"
             onClick={onClose}
             className="inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            disabled={isSubmitting}
           >
-            {agent ? "Update" : "Add"} Agent
+            {isSubmitting ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              `${agent ? "Update" : "Add"} Agent`
+            )}
           </button>
         </div>
       </form>
