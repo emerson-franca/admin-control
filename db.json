@@ -1,0 +1,32 @@
+{
+  "agents": [
+    {
+      "id": "1",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "status": "Active",
+      "lastSeen": "2025-01-18T15:13:03.790Z"
+    },
+    {
+      "id": "2",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "status": "Active",
+      "lastSeen": "2025-01-18T10:30:00-03:00"
+    },
+    {
+      "id": "3",
+      "name": "Bob Wilson",
+      "email": "bob@example.com",
+      "status": "Inactive",
+      "lastSeen": "2025-01-17T15:45:00-03:00"
+    },
+    {
+      "id": "1737212664945",
+      "name": "emerson@test.com",
+      "email": "emerson@test.com",
+      "status": "Active",
+      "lastSeen": "2025-01-18T15:04:24.945Z"
+    }
+  ]
+}
