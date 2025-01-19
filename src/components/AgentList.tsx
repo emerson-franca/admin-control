@@ -1,5 +1,6 @@
 import React from "react";
 import { useAgentContext } from "../context/AgentContext";
+import { useNavigate } from "react-router-dom";
 
 interface Agent {
   id: string;
@@ -16,9 +17,18 @@ interface AgentListProps {
 
 const AgentList: React.FC<AgentListProps> = ({ agents, onEdit }) => {
   const { dispatch } = useAgentContext();
+  const navigate = useNavigate();
+
+  if (agents.length === 0) {
+    return <div className="text-gray-500">No agents found.</div>;
+  }
 
   const handleDelete = (id: string) => {
     dispatch({ type: "DELETE_AGENT", payload: id });
+  };
+
+  const handleRowClick = (agent: Agent) => {
+    navigate(`/agent/${agent.id}`);
   };
 
   return (
@@ -48,7 +58,11 @@ const AgentList: React.FC<AgentListProps> = ({ agents, onEdit }) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {agents.map((agent) => (
-                <tr key={agent.id} className="hover:bg-gray-50">
+                <tr
+                  key={agent.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleRowClick(agent)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {agent.name}

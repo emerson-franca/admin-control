@@ -93,7 +93,7 @@ function agentReducer(state: AgentState, action: AgentAction): AgentState {
   }
 }
 
-const AgentContext = createContext<
+export const AgentContext = createContext<
   { state: AgentState; dispatch: React.Dispatch<AgentAction> } | undefined
 >(undefined);
 
