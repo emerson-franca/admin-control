@@ -1,14 +1,20 @@
-import { AgentProvider } from "./context/AgentContext";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AgentDashboard from "./components/AgentDashboard";
+import AgentDetails from "./components/AgentDetails";
+import { AgentProvider } from "./context/AgentContext";
 
-const App = () => {
+function App() {
   return (
-    <AgentProvider>
-      <div className="min-h-screen bg-gray-50">
-        <AgentDashboard />
-      </div>
-    </AgentProvider>
+    <Router>
+      <AgentProvider>
+        <Routes>
+          <Route path="/" element={<AgentDashboard />} />
+          <Route path="/agent/:id" element={<AgentDetails />} />
+        </Routes>
+      </AgentProvider>
+    </Router>
   );
-};
+}
 
 export default App;
